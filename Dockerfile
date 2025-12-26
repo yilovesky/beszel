@@ -7,18 +7,19 @@ COPY . .
 # 1. 汉化处理
 RUN if [ -f "i18n.yml" ]; then sed -i 's/Dashboard/仪表盘/g' i18n.yml; fi
 
-# 2. 编译 Go 程序 (静态编译)
-RUN go mod tidy && CGO_ENABLED=0 go build -o hub beszel.go
+# 2. 【核心修复】：显式指定 GOARCH=amd64 确保兼容性
+RUN go mod tidy && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hub beszel.go
 
 # 阶段 2: 运行
 FROM alpine:latest
 WORKDIR /app
 
-# 从编译阶段拷贝成品
+# 拷贝编译好的文件
 COPY --from=builder /app/hub /app/hub
 COPY --from=builder /app/i18n.yml /app/i18n.yml
 
-# 【关键修复】：赋予 hub 运行权限
+# 赋予执行权限
 RUN chmod +x /app/hub
 
 # 下载全球地图数据库
