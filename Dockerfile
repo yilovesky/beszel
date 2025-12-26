@@ -1,4 +1,4 @@
-# 升级到 1.25.5 版本以满足项目要求
+# 使用官方 Go 环境
 FROM golang:1.25.5-alpine
 WORKDIR /app
 
@@ -11,9 +11,8 @@ COPY . .
 # 1. 物理汉化
 RUN if [ -f "i18n.yml" ]; then sed -i 's/Dashboard/仪表盘/g' i18n.yml; fi
 
-# 2. 现场编译
-# 增加 GOTOOLCHAIN=auto 允许 Go 自动切换到所需的次要版本
-RUN GOTOOLCHAIN=auto go mod tidy && go build -o /app/beszel-hub beszel.go
+# 2. 现场编译 (增加 CGO_ENABLED=0 和 GOARCH=amd64 强制生成兼容 x86 的文件)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/beszel-hub beszel.go
 
 # 3. 显式赋权
 RUN chmod +x /app/beszel-hub
